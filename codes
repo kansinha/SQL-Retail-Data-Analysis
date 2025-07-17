@@ -1,0 +1,176 @@
+SQL E-learning project
+	
+-- SELECT* from Product
+-- UPDATE Product
+-- SET `Status` = 'ACTIVE'
+-- WHERE `Status` = 'Active';
+-- select * from Orders
+-- order by CreationDate DESC
+
+-- filter null values from customer table
+
+-- select FirstName, LastName, Email,
+-- Phone FROM Customer
+-- where FirstName is NULL or LastName is NULL OR
+-- Email is null or Phone is NULL
+
+-- remove null values from customer
+
+-- select FirstName, LastName, Email, Phone from Customer
+-- WHERE Email is NOT NULL and phone is NOT NULL
+
+-- How to derive months Column
+select * , 
+MONTH(CreationDate) as MONTHS,
+monthname(CreationDate) as monthsname
+from Orders;
+
+
+-- Insert a customer information in the dataset
+-- insert into Customer(CustomerID,
+-- FirstName,
+-- LastName,
+-- Email,
+-- Phone,
+-- Address,
+-- City,
+-- State,
+-- Zipcode
+-- ) values(
+ -- 1100,
+  -- 'Jane',
+  -- 'Paterson',
+  -- 'jane.paterson@gmail.com',
+  -- '(912)459-2910',
+  -- '4029 Park Street',
+  -- 'Kansas City',
+  -- 'MO',
+  -- '64161'
+-- )
+-- select * FROM Customer (verify the table)
+-- determine which products are discontinues
+-- select*from Product
+-- where status = 'DISCONTINUED'
+-- Ques anysales person who made no sales
+-- select s.SalespersonId, s.FirstName, s.LastName from Salesperson s
+-- LEFT OUTER JOIN Orders o on
+-- s.SalespersonID = o.SalespersonID
+-- group by o.SalespersonId
+-- HAVING count(o.OrderID) = 0
+
+-- determine the top product size sold
+
+
+SELECT p.Size, SUM(oi.Quantity) AS TotalSold
+-- FROM Product p
+-- JOIN OrderItem oi ON p.ProductID = oi.ProductID
+-- GROUP BY p.Size
+-- ORDER BY TotalSold DESC
+-- LIMIT 2;
+
+-- Determine top 3 items/ product sold
+-- SELECT p.Variety, p.size,  SUM(oi.Quantity) AS TotalSold
+-- FROM Product p
+-- JOIN OrderItem oi ON p.ProductID = oi.ProductID
+-- GROUP BY p.ProductID
+-- ORDER BY TotalSold DESC
+-- LIMIT 3;
+
+
+Find sales by month and year
+SELECT
+MONTHNAME(CreationDate) as MonthName,
+YEAR(CreationDate) as OrderYear,
+COUNT(Orders.OrderID) as TotalOrders,
+SUM(Quantity) as TotalQuantity,
+SUM(TotalDue) as TotalAmount
+FROM Orders
+LEFT OUTER JOIN OrderItem
+ON Orders.OrderID = OrderItem.OrderID
+GROUP BY MonthName, OrderYear
+ORDER BY OrderYear, MONTH(CreationDate);
+
+
+-- find top customers
+select 
+sum(Quantity)/ count(DISTINCT CreationDate) as avg_sales
+from Orders o
+LEFT OUTER JOIN OrderItem oi ON
+o.OrderID = oi.OrderID
+
+
+-- top purchasing customers
+select count(distinct o.OrderId) as total_orders,
+o.customerID,
+sum(oi.Quantity) as total_quantity,
+round(sum(o.TotalDue), 2) as total_amt_sold
+from Orders o
+LEFT OUTER JOIN OrderItem oi ON
+o.OrderID = oi.OrderID
+GROUP BY o.CustomerID
+ORDER BY total_amt_sold DESC, total_quantity DESC
+
+
+-- to determine infrequent customers
+SElect firstName, LastName, c.CustomerId,
+count(DISTINCT o.OrderID) as total_orders,
+sum(TotalDue) as total_amount_sold,
+sum(Quantity) as total_quantity
+from Customer c
+left OUTER JOIN Orders o ON
+c.CustomerID = o.CustomerID
+LEFT OUTER JOIN OrderItem oi ON
+o.OrderID = oi.OrderID
+group by CustomerID
+HAVING count(o.OrderID) = 1 and
+total_quantity < 50
+order BY total_quantity DESC, total_amount_sold
+
+
+-- determine which state purchases the most products
+select c.State,
+count(distinct o.OrderId) as total_orders,
+round(sum(o.TotalDue), 2) as total_amount,
+sum(oi.Quantity) as total_quantity
+from Customer c
+LEFT OUTER JOIN Orders o ON
+c.CustomerID = o.CustomerID
+LEFT OUTER JOIN OrderItem oi ON
+o.OrderID = oi.OrderID
+group by c.State
+order by total_quantity DESC, total_orders DESC, total_amount
+
+
+-- Calculate repeat customer rate
+
+WITH repeat_customers AS (
+    SELECT CustomerID
+    FROM Orders
+    GROUP BY CustomerID
+    HAVING COUNT(OrderID) > 1
+)
+SELECT 
+    ROUND(
+        COUNT(DISTINCT repeat_customers.CustomerID) * 1.0 /
+        COUNT(DISTINCT Orders.CustomerID) * 100, 2
+    ) AS repeat_customer_rate_percentage
+FROM Orders
+LEFT JOIN repeat_customers 
+    ON Orders.CustomerID = repeat_customers.CustomerID;
+
+
+-- find new customers
+
+select c.customerid, 
+c.firstname, c.LastName,
+count(OrderID) as total_orders
+ from Customer c
+LEFT OUTER JOIN Orders o ON
+c.CustomerID = o.CustomerID
+GROUP by c.customerid
+having count(o.OrderID) = 0
+
+
+#learn about Null in left outer joins
+
+
